@@ -1,45 +1,48 @@
-##############################################################################
-"""███╗   ███╗ █████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ██████╗  █████╗
-   ████╗ ████║██╔══██╗╚══███╔╝████╗ ████║██╔═══██╗╚════██╗██╔══██╗██╔══██╗
-   ██╔████╔██║███████║  ███╔╝ ██╔████╔██║██║   ██║ █████╔╝██████╔╝███████║
-   ██║╚██╔╝██║██╔══██║ ███╔╝  ██║╚██╔╝██║██║   ██║██╔═══╝ ██╔══██╗██╔══██║
-   ██║ ╚═╝ ██║██║  ██║███████╗██║ ╚═╝ ██║╚██████╔╝███████╗██║  ██║██║  ██║
-   ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝"""
-##############################################################################
+from modelo import Campaña, Mazmorra, Sala, Enemigo, Objeto, Personaje
 
-class Campaña:
-    def __init__(self, nombre_c: str, descripcion: str, mazmorras: list[Mazmorra]):
-        self.nombre_c = nombre_c
-        self.descripcion = descripcion 
-        self.mazmorras = mazmorras 
+def main() -> None:
+    espada = Objeto("Espada oxidada", "arma", "Una espada vieja pero afilada")
+    pocion = Objeto("Poción menor", "consumible", "Restaura algo de vida")
 
-class Mazmorra:
-    def __init__(self, nombre_m: str, tesoro: float, salas: list[Sala]):
-        self.nombre_m = nombre_m
-        self.tesoro = tesoro
-        self.salas = salas
+    goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
 
-    def valor_stock(self) -> float:
-        return self.tesoro * self.tesoro
+    heroe = Personaje("Aria", vida=30, ataque=5, defensa=2, inventario=[pocion])
 
-    def __repr__(self) -> str:
-        return f"Mazmorra({self.nombre!r}, {self.tesoro}, {self.monstruo}, {self.salas})"
+    # Se crea la sala con objeto espada y enemigo goblin (ESTO HAY QUE HACERLO ALEATORIO!! En un futuro :))
+    sala_entrada = Sala(
+        posicion=(0, 0),
+        tipo="entrada",
+        objetos=[espada],
+        enemigos=[goblin],
+    )
 
-class Sala:
-    def __init__(self, posicion: int, tipo: str, objetos: list[Objeto], enemigos: list[Enemigo]):
-        self.posicion = posicion
-        self.tipo = tipo
-        self.objetos = objetos
+    # Se crea la Mazmorra con esta Sala  
+    mazmorra = Mazmorra("Cripta Olvidada", tesoro=150.0, salas=[sala_entrada])
 
-class Enemigo:
-    def __init__(self, nombre_o: str, vida: int, ataque: int, defensa: int):
-        self.nombre_o = nombre_o
-        self.vida = vida
-        self.ataque = ataque
-        self.defensa = defensa 
-     
-class Objeto:
-    def __init__(self, nombre_o: str, tipo: str, descripcion_o: str):
-        self.nombre_o = nombre_o
-        self.tipo = tipo
-        self.descripcion_o = descripcion_o 
+    # Aqui se crea la campaña que contiene mazmorra
+    campaña = Campaña(
+        "Aventura Inicial",
+        "Una primera incursión de prueba",
+        mazmorras=[mazmorra],
+    )
+
+    # Este el flujo incial en el que se recorre la estruct
+    print("=== Campaña ===")
+    print(campaña)
+
+    print("\n=== Mazmorras ===")
+    for m in campaña.mazmorras:
+        print(m)
+
+        print("\n--- Salas ---")
+        for sala in m.salas:
+            print(sala)
+
+    print("\n=== Personaje ===")
+    print(heroe)
+
+    print("\n¿Mazmorra despejada?", mazmorra.esta_despejada())
+
+
+if __name__ == "__main__":
+    main()
