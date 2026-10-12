@@ -1,5 +1,6 @@
 import pytest
-from modelo import Campaña, Mazmorra, Sala, Enemigo, Objeto, Personaje
+from modelo import (Campaña, Mazmorra, Sala, Enemigo, Objeto, Personaje,
+                    Entidad, Combate, GeneradorMazmorras)
 
 # 1. pruebas basicas para ver que las clases se crean bien y no fallan
 
@@ -8,13 +9,13 @@ from modelo import Campaña, Mazmorra, Sala, Enemigo, Objeto, Personaje
 
 def test_crear_enemigo_basico():
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
-    assert goblin.nombre_e == "Goblin"
+    assert goblin.nombre == "Goblin"
     assert goblin.vida == 10
 
 
 def test_mazmorra_contiene_sala_con_enemigo():
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
-    sala = Sala((0, 0), "entrada", objetos=[], enemigos=[goblin])
+    sala = Sala(0, "entrada", objetos=[], enemigos=[goblin])  # la posicion ahora es un entero
     mazmorra = Mazmorra("Cripta", tesoro=100.0, salas=[sala])
 
     assert mazmorra.salas[0].enemigos[0] is goblin
@@ -80,6 +81,81 @@ def test_correccion_argumento_por_defecto_mutable():
     assert resultado_1 is not resultado_2
     assert resultado_1 == ["espada"]
     assert resultado_2 == ["poción"]
+
+
+# 4. validaciones y herencia
+# pytest.raises comprueba que el codigo lanza la excepcion esperada; si no la lanza, el test falla
+
+def test_vida_negativa_lanza_error():
+    with pytest.raises(ValueError):
+        Enemigo("Goblin", vida=-1, ataque=3, defensa=1)
+
+
+def test_personaje_y_enemigo_heredan_de_entidad():
+    goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
+    heroe = Personaje("Aria", vida=30, ataque=5, defensa=2, inventario=[])
+
+    assert isinstance(goblin, Entidad)
+    assert isinstance(heroe, Entidad)
+
+
+# 5. daño y ataque
+
+def test_recibir_dano_no_baja_de_cero():
+    goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
+
+    goblin.recibir_dano(100)  # mas daño que vida: se queda en 0, no en negativo
+    assert goblin.vida == 0
+    assert goblin.esta_vivo() is False
+
+
+def test_atacar_usa_la_defensa_del_objetivo():
+    heroe = Personaje("Aria", vida=30, ataque=5, defensa=2, inventario=[])
+    goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
+
+    dano = heroe.atacar(goblin)  # 5 - 1 = 4
+    assert dano == 4
+    assert goblin.vida == 6
+
+
+# 6. combate: no hay aleatoriedad asi que el resultado se puede calcular a mano
+
+def test_combate_gana_el_personaje_fuerte():
+    heroe = Personaje("Aria", vida=50, ataque=8, defensa=3, inventario=[])
+    goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
+
+    assert Combate(heroe, goblin).ejecutar() is True
+    assert goblin.esta_vivo() is False
+
+
+def test_combate_pierde_el_personaje_debil():
+    heroe = Personaje("Debil", vida=5, ataque=1, defensa=0, inventario=[])
+    orco = Enemigo("Orco", vida=20, ataque=5, defensa=3)
+
+    assert Combate(heroe, orco).ejecutar() is False
+    assert heroe.esta_vivo() is False
+
+
+# 7. generador: la clave es que con la misma semilla salga lo mismo
+
+def test_misma_semilla_genera_la_misma_mazmorra():
+    m1 = GeneradorMazmorras(semilla=7).generar_mazmorra("Cripta", num_salas=4)
+    m2 = GeneradorMazmorras(semilla=7).generar_mazmorra("Cripta", num_salas=4)
+
+    assert repr(m1) == repr(m2)
+
+
+def test_estructura_de_la_mazmorra_generada():
+    mazmorra = GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", num_salas=4)
+
+    assert len(mazmorra.salas) == 4
+    assert mazmorra.salas[0].tipo == "entrada"
+    assert mazmorra.salas[0].enemigos == []   # la entrada es segura
+
+
+def test_generador_sin_salas_lanza_error():
+    with pytest.raises(ValueError):
+        GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", num_salas=0)
 
 
 if __name__ == "__main__":
