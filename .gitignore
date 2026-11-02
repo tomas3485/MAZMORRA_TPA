@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secretos / configuración local
+.env
+
+# Archivos generados por el juego (¡importante!)
+partida.json
+mazmorra.log
+*.tmp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
