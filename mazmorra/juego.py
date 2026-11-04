@@ -58,7 +58,7 @@ class Juego:
         for observador in self.observadores:
             observador(texto)
 
-    # ------------------------------------------------------------ partida
+    # partida
     def nueva_partida(self, nombre: str, iniciales: int = MAZMORRAS_INICIALES) -> None:
         self.personaje = Personaje(nombre, 50, 6, 2, [])
         self.campana = Campaña("Las mazmorras olvidadas", "Limpia todas las mazmorras que puedas", [])
@@ -136,7 +136,7 @@ class Juego:
         self.personaje.curar()
         self._emitir(f"¡{mazmorra.nombre_m} completada! +{mazmorra.tesoro} de oro. Subes al nivel {self.nivel}")
 
-    # ------------------------------------------------------------ guardar, cargar y exportar
+    # guardar, cargar y exportar
     def guardar(self) -> None:
         guardar_partida(self.ruta, self.personaje, self.campana, self.completadas)
 

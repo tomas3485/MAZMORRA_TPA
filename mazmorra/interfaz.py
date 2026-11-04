@@ -192,7 +192,7 @@ class App:
         ):
             self._empezar()
 
-    # ------------------------------------------------------------ pintar
+    # pintar
     def refrescar(self):
         p = self.juego.personaje
         self.nombre_var.set(p.nombre)
@@ -250,7 +250,7 @@ class App:
         self.log.see("end")
         self.log.configure(state="disabled")
 
-    # ------------------------------------------------------------ acciones
+    #  acciones
     def _indice(self):
         seleccion = self.lista_mazmorras.curselection()
         if not seleccion:
@@ -292,7 +292,7 @@ class App:
             return
         self.refrescar()
 
-    # ------------------------------------------------------------ guardar / exportar / cerrar
+    # guardar / exportar / cerrar
     def guardar(self) -> bool:
         try:
             self.juego.guardar()
