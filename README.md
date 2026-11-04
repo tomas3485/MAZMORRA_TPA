@@ -1,10 +1,8 @@
 # Mazmorra
 
-Aplicación en Python para crear y gestionar aventuras de rol: campañas, mazmorras,
-salas, enemigos, objetos y personajes.
-
-Proyecto de la asignatura Técnicas de Programación Avanzada (Grado en Ingeniería
-Informática, Universidad Nebrija).
+Aplicación en Python para crear y jugar aventuras de rol: campañas, mazmorras,
+salas, enemigos, objetos y personajes. Proyecto de Técnicas de Programación Avanzada
+(Grado en Ingeniería Informática, Universidad Nebrija).
 
 ## Grupo
 
@@ -12,10 +10,6 @@ Informática, Universidad Nebrija).
 - Luis Torrecilla
 - Alberto Prieto
 - Carlos Garcia-Mauriño
-
-## Requisitos
-
-- Python 3.10 o superior
 
 ## Instalación
 
@@ -25,36 +19,67 @@ cd MAZMORRA_TPA
 python -m venv venv
 venv\Scripts\activate      # Windows
 pip install -r requirements.txt
+pip install -e .
+```
 
+Requiere Python 3.10 o superior.
 
-Instalación
-git clone https://github.com/tomas3485/MAZMORRA_TPA.git
-cd MAZMORRA_TPA
-python -m venv venv
-venv\Scripts\activate      # Windows
-pip install -r requirements.txt
-Ejecución
-python main.py
-Estado actual (Práctica 2)
-Modelo de dominio con herencia: Entidad es la clase base de Personaje y Enemigo; Enemigo se especializa en Goblin (ataque estándar) y Orco (daño aumentado, ignora parte de su propia defensa al cargar) — polimorfismo real: Combate llama a atacar() sin saber qué subtipo de enemigo es, y cada uno responde distinto.
+## Uso
 
-Componentes:
+```bash
+python -m mazmorra
+```
 
-Entidad / Personaje / Enemigo / Goblin / Orco: atributos (nombre, vida, ataque, defensa) encapsulados con @property y validación de tipo.
-Sala, Mazmorra, Campaña: agregación (Campaña contiene Mazmorra, que contiene Sala, que contiene Enemigo y Objeto).
-Combate: combate por turnos determinista (sin aleatoriedad, resultados calculables a mano).
-GeneradorMazmorras: generación procedural con semilla reproducible.
-La sala en posición 0 siempre es "entrada" y nunca tiene enemigos.
-El resto de salas tienen 1-2 enemigos elegidos al azar entre Goblin, Esqueleto (Enemigo) y Orco.
-Con la misma semilla (GeneradorMazmorras(semilla=N)), la mazmorra generada es siempre idéntica.
-Pruebas
-XX tests con pytest, cubriendo: creación de entidades, identidad vs. igualdad (is/==), el bug del argumento por defecto mutable, validaciones de tipo, daño y combate, polimorfismo entre tipos de enemigo, y generación procedural reproducible.
+- Se genera una campaña con mazmorras aleatorias.
+- Se avanza sala a sala: salas de objeto (equipar arma) y salas de enemigo (combate por turnos).
+- Si el personaje pierde, la mazmorra se reinicia. Si gana, cobra el tesoro y sube de nivel.
+- La partida se guarda y se carga en `partida.json`.
+- Todo lo que ocurre queda registrado en `mazmorra.log`.
+- La campaña se puede exportar a JSON o Markdown.
 
-pytest test_modelo.py -v
-Roadmap
-Práctica 2: herencia, polimorfismo, excepciones. ✅
-Práctica 3: patrones de diseño.
-Práctica 4: interfaz gráfica y concurrencia.
-Solo te queda un paso manual: cambia XX por el número real de tests (lo ves en la última línea de pytest test_modelo.py -v, tipo 23 passed).
+Configuración opcional con variables de entorno: `MAZMORRA_DATOS` (fichero de partida),
+`MAZMORRA_LOG` (nivel de log) y `MAZMORRA_LOGFILE` (fichero de log).
 
-Sigue pendiente tu respuesta para arrancar PRAC3: ¿JSON o SQLite para la persistencia?
+## Estructura (guía para desarrolladores)
+
+| Fichero | Qué hace |
+|---|---|
+| `mazmorra/modelo.py` | Entidad, Personaje, Enemigo (Goblin, Orco), Objeto, Sala, Mazmorra, Campaña, Combate, GeneradorMazmorras y excepciones propias |
+| `mazmorra/juego.py` | Lógica de la partida (clase `Juego`) y configuración del logging |
+| `mazmorra/persistencia.py` | Guardar/cargar la partida en JSON y exportar a JSON o Markdown |
+| `mazmorra/interfaz.py` | Interfaz gráfica con tkinter |
+| `mazmorra/__main__.py` | Punto de entrada (`python -m mazmorra`) |
+| `test_*.py` | Tests con pytest |
+
+Patrones de diseño usados:
+- **Factory:** `crear_enemigo` es el único sitio que decide qué clase de enemigo se crea.
+- **Observer:** `Combate` y `Juego` avisan a sus suscriptores en cada evento (log, interfaz).
+- **Strategy:** cada formato de exportación (`ExportadorJSON`, `ExportadorMarkdown`) es intercambiable.
+- **Facade:** `Juego` coordina generador, combate, persistencia y exportación.
+
+Otras decisiones:
+- Excepciones propias: `ErrorMazmorra`, `DatoInvalidoError` (también es `ValueError`),
+  `ErrorPersistencia` y `ErrorExportacion`.
+- Guardado seguro: se escribe en un fichero temporal y luego se renombra, así no se pierde
+  la partida si algo falla a medias.
+- El JSON se trata como dato no fiable: se valida al cargarlo y nunca se ejecuta.
+- La generación procedural es reproducible: con la misma semilla sale la misma mazmorra.
+
+## Pruebas
+
+```bash
+python -m pytest
+```
+
+214 tests, con una cobertura real del 63% (se muestra al ejecutar pytest).
+La interfaz gráfica (`interfaz.py`) y el punto de entrada (`__main__.py`) no tienen
+tests automáticos: se prueban a mano.
+
+## Estado
+
+- Práctica 1: modelo de dominio ✅
+- Práctica 2: herencia, polimorfismo y excepciones ✅
+- Práctica 3: persistencia, logging, paquete, patrones, tests y documentación ✅
+- Práctica 4: interfaz gráfica y concurrencia (pendiente)
+
+- Licencia MIT (ver `LICENSE`).
