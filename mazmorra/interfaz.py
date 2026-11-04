@@ -1,4 +1,4 @@
-# interfaz grafica (tkinter). Solo habla con Juego, no conoce el generador ni los ficheros
+# interfaz grafica (tkinter). Solo habla con Juego, no conoce el generador ni los ficheros..
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk

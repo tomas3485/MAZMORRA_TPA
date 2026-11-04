@@ -2,7 +2,7 @@ from __future__ import annotations  # sin esto Campaña da NameError porque usa 
 import random
 
 
-# excepciones propias. DatoInvalidoError tambien es ValueError, asi los tests con pytest.raises(ValueError) siguen valiendo
+# excepciones propias. DatoInvalidoError tambien es ValueError, asi los tests con pytest.raises(ValueError) siguen valiendo..
 class ErrorMazmorra(Exception):
     pass
 

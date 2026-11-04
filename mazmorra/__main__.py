@@ -1,4 +1,4 @@
-# punto de entrada: python -m mazmorra  (interfaz grafica)  o  python -m mazmorra --consola
+# punto de entrada: python -m mazmorra  (interfaz grafica)  o  python -m mazmorra --consola.
 import argparse
 import logging
 import sys

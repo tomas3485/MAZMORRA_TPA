@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # configuracion: se puede cambiar con variables de entorno sin tocar el codigo
 # NOTA DE SEGURIDAD: no hay contraseñas ni claves. El json se trata como dato no fiable:
-# se valida al cargarlo y nunca se ejecuta (nada de pickle, eval ni exec)
+# se valida al cargarlo y nunca se ejecuta (nada de pickle, eval ni exec)..
 RUTA_DATOS = os.environ.get("MAZMORRA_DATOS", "partida.json")
 NIVEL_LOG = os.environ.get("MAZMORRA_LOG", "INFO").upper()
 FICHERO_LOG = os.environ.get("MAZMORRA_LOGFILE", "mazmorra.log")
