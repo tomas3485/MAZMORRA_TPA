@@ -80,6 +80,15 @@ tests automáticos: se prueban a mano.
 - Práctica 1: modelo de dominio ✅
 - Práctica 2: herencia, polimorfismo y excepciones ✅
 - Práctica 3: persistencia, logging, paquete, patrones, tests y documentación ✅
-- Práctica 4: interfaz gráfica y concurrencia (pendiente)
+- Práctica 4: tests de integración, cobertura 74%, empaquetado final, documentación ✅
+
+##Contribuciones
+| Persona | Aportación |
+|---|---|
+| Tomas Lozano | Modelo de dominio inicial, generador procedural de mazmorras |
+| Luis Torrecilla | Lógica del juego (juego.py), guardado y carga de partidas |
+| Alberto Prieto | Tests (modelo, persistencia, juego, integración), excepciones propias, documentación |
+| Carlos Garcia-Mauriño | Interfaz gráfica (tkinter) |
+
 
 - Licencia MIT (ver `LICENSE`).
