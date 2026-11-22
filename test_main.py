@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from mazmorra._main_ import main
+from mazmorra.__main__ import main
 
 
 def test_main_consola_crea_partida_juega_y_guarda(tmp_path, monkeypatch, capsys):
