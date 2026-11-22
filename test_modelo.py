@@ -23,6 +23,7 @@ from mazmorra.modelo import (
 
 
 def test_crear_enemigo_basico():
+    # Comprueba que un enemigo guarda correctamente sus atributos.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
 
     assert goblin.nombre == "Goblin"
@@ -32,6 +33,8 @@ def test_crear_enemigo_basico():
 
 
 def test_mazmorra_contiene_sala_con_enemigo():
+    # Comprueba la relación mazmorra -> sala -> enemigo y que una mazmorra
+    # con enemigos vivos no está despejada.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
     sala = Sala(0, "entrada", objetos=[], enemigos=[goblin])
     mazmorra = Mazmorra("Cripta", tesoro=100.0, salas=[sala])
@@ -41,6 +44,7 @@ def test_mazmorra_contiene_sala_con_enemigo():
 
 
 def test_crear_campana_con_mazmorra():
+    # Comprueba que una campaña guarda su nombre y sus mazmorras.
     mazmorra = Mazmorra("Cripta", 100.0, [])
     campana = Campaña("La aventura", "Una aventura de prueba", [mazmorra])
 
@@ -49,6 +53,7 @@ def test_crear_campana_con_mazmorra():
 
 
 def test_personaje_y_enemigo_heredan_de_entidad():
+    # Comprueba la herencia: ambos son subclases de Entidad.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
     heroe = Personaje("Aria", vida=30, ataque=5, defensa=2, inventario=[])
 
@@ -62,6 +67,7 @@ def test_personaje_y_enemigo_heredan_de_entidad():
 
 
 def test_identidad_vs_igualdad_con_alias():
+    # Dos nombres para el mismo objeto: son idénticos (is) e iguales (==).
     goblin_a = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
     goblin_b = goblin_a
 
@@ -71,6 +77,7 @@ def test_identidad_vs_igualdad_con_alias():
 
 
 def test_identidad_vs_igualdad_con_copias_distintas():
+    # Dos objetos distintos con los mismos datos: iguales (==) pero no idénticos (is).
     goblin_1 = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
     goblin_2 = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
 
@@ -80,6 +87,7 @@ def test_identidad_vs_igualdad_con_copias_distintas():
 
 
 def test_igualdad_devuelve_false_si_difieren_los_datos():
+    # Dos enemigos con datos distintos no son iguales.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
     orco = Enemigo("Orco", vida=20, ataque=5, defensa=3)
 
@@ -93,11 +101,13 @@ def test_igualdad_devuelve_false_si_difieren_los_datos():
 
 
 def crear_lista_con_bug(elemento, lista=[]):
+    # Versión con bug: la lista por defecto se comparte entre llamadas.
     lista.append(elemento)
     return lista
 
 
 def crear_lista_corregida(elemento, lista=None):
+    # Versión corregida: crea una lista nueva en cada llamada.
     if lista is None:
         lista = []
     lista.append(elemento)
@@ -105,6 +115,7 @@ def crear_lista_corregida(elemento, lista=None):
 
 
 def test_bug_argumento_por_defecto_mutable():
+    # Demuestra que con el bug ambas llamadas devuelven la misma lista.
     resultado_1 = crear_lista_con_bug("espada")
     resultado_2 = crear_lista_con_bug("poción")
 
@@ -113,6 +124,7 @@ def test_bug_argumento_por_defecto_mutable():
 
 
 def test_correccion_argumento_por_defecto_mutable():
+    # Demuestra que la versión corregida devuelve listas independientes.
     resultado_1 = crear_lista_corregida("espada")
     resultado_2 = crear_lista_corregida("poción")
 
@@ -128,29 +140,34 @@ def test_correccion_argumento_por_defecto_mutable():
 
 @pytest.mark.parametrize("vida", [-1, 1.5, "10", True])
 def test_vida_invalida_lanza_error(vida):
+    # La vida debe ser un entero no negativo (ni float, str ni bool).
     with pytest.raises(ValueError):
         Enemigo("Goblin", vida=vida, ataque=3, defensa=1)
 
 
 @pytest.mark.parametrize("ataque", [-1, 2.5, "3", False])
 def test_ataque_invalido_lanza_error(ataque):
+    # El ataque debe ser un entero no negativo.
     with pytest.raises(ValueError):
         Enemigo("Goblin", vida=10, ataque=ataque, defensa=1)
 
 
 @pytest.mark.parametrize("defensa", [-1, 2.5, "1", True])
 def test_defensa_invalida_lanza_error(defensa):
+    # La defensa debe ser un entero no negativo.
     with pytest.raises(ValueError):
         Enemigo("Goblin", vida=10, ataque=3, defensa=defensa)
 
 
 @pytest.mark.parametrize("nombre", ["", "   ", None, 123])
 def test_nombre_invalido_lanza_error(nombre):
+    # El nombre debe ser un texto no vacío.
     with pytest.raises(ValueError):
         Enemigo(nombre, vida=10, ataque=3, defensa=1)
 
 
 def test_vida_cero_significa_que_la_entidad_no_esta_viva():
+    # Con vida 0, esta_vivo() devuelve False.
     goblin = Enemigo("Goblin", vida=0, ataque=3, defensa=1)
 
     assert goblin.esta_vivo() is False
@@ -171,11 +188,13 @@ def test_vida_cero_significa_que_la_entidad_no_esta_viva():
     ],
 )
 def test_objeto_con_datos_invalidos_lanza_error(nombre, tipo, descripcion):
+    # Un objeto no admite nombre, tipo o descripción vacíos.
     with pytest.raises(ValueError):
         Objeto(nombre, tipo, descripcion)
 
 
 def test_crear_objeto_valido():
+    # Un objeto válido guarda sus datos y su bonus es 0 por defecto.
     objeto = Objeto("Espada", "arma", "Una espada de prueba")
 
     assert objeto.nombre_o == "Espada"
@@ -186,48 +205,57 @@ def test_crear_objeto_valido():
 
 @pytest.mark.parametrize("bonus", [-1, 1.5, "2", True])
 def test_objeto_rechaza_bonus_invalido(bonus):
+    # El bonus debe ser un entero no negativo.
     with pytest.raises(ValueError):
         Objeto("Espada", "arma", "Una espada", bonus)
 
 
 @pytest.mark.parametrize("posicion", [-1, 1.5, "0", True])
 def test_posicion_de_sala_invalida_lanza_error(posicion):
+    # La posición de una sala debe ser un entero no negativo.
     with pytest.raises(ValueError):
         Sala(posicion, "normal", [], [])
 
 
 def test_sala_rechaza_elementos_que_no_son_objetos():
+    # La lista de objetos de una sala solo admite instancias de Objeto.
     with pytest.raises(ValueError):
         Sala(0, "entrada", ["espada"], [])
 
 
 def test_sala_rechaza_elementos_que_no_son_enemigos():
+    # La lista de enemigos de una sala solo admite instancias de Enemigo.
     with pytest.raises(ValueError):
         Sala(0, "entrada", [], ["goblin"])
 
 
 def test_mazmorra_rechaza_tesoro_negativo():
+    # El tesoro de una mazmorra no puede ser negativo.
     with pytest.raises(ValueError):
         Mazmorra("Cripta", -1, [])
 
 
 @pytest.mark.parametrize("tesoro", ["100", True, None])
 def test_mazmorra_rechaza_tesoro_de_tipo_incorrecto(tesoro):
+    # El tesoro debe ser numérico (no texto, bool ni None).
     with pytest.raises(ValueError):
         Mazmorra("Cripta", tesoro, [])
 
 
 def test_mazmorra_rechaza_salas_de_tipo_incorrecto():
+    # Las salas de una mazmorra deben ser instancias de Sala.
     with pytest.raises(ValueError):
         Mazmorra("Cripta", 100, ["sala"])
 
 
 def test_campana_rechaza_mazmorras_de_tipo_incorrecto():
+    # Las mazmorras de una campaña deben ser instancias de Mazmorra.
     with pytest.raises(ValueError):
         Campaña("Aventura", "Descripción", ["Cripta"])
 
 
 def test_personaje_rechaza_inventario_de_tipo_incorrecto():
+    # El inventario del personaje solo admite instancias de Objeto.
     with pytest.raises(ValueError):
         Personaje("Aria", 30, 5, 2, ["espada"])
 
@@ -238,6 +266,7 @@ def test_personaje_rechaza_inventario_de_tipo_incorrecto():
 
 
 def test_recibir_dano_no_baja_de_cero():
+    # La vida se queda en 0 aunque el daño recibido sea mayor.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
 
     goblin.recibir_dano(100)
@@ -248,6 +277,7 @@ def test_recibir_dano_no_baja_de_cero():
 
 @pytest.mark.parametrize("cantidad", [-1, 1.5, "5", True])
 def test_recibir_dano_rechaza_cantidades_invalidas(cantidad):
+    # El daño debe ser un entero no negativo y, si es inválido, la vida no cambia.
     goblin = Enemigo("Goblin", vida=10, ataque=3, defensa=1)
 
     with pytest.raises(ValueError):
@@ -258,6 +288,7 @@ def test_recibir_dano_rechaza_cantidades_invalidas(cantidad):
 
 
 def test_atacar_usa_la_defensa_del_objetivo():
+    # El daño es el ataque menos la defensa del objetivo (5 - 1 = 4).
     heroe = Personaje("Aria", 30, 5, 2, [])
     goblin = Enemigo("Goblin", 10, 3, 1)
 
@@ -268,6 +299,7 @@ def test_atacar_usa_la_defensa_del_objetivo():
 
 
 def test_el_ataque_hace_como_minimo_un_punto_de_dano():
+    # Aunque la defensa supere al ataque, el daño mínimo es 1.
     heroe = Personaje("Aria", 30, 1, 2, [])
     orco = Enemigo("Orco", 20, 5, 10)
 
@@ -283,6 +315,7 @@ def test_el_ataque_hace_como_minimo_un_punto_de_dano():
 
 
 def test_combate_gana_el_personaje_fuerte():
+    # Un héroe fuerte gana: ejecutar() devuelve True y el enemigo muere.
     heroe = Personaje("Aria", 50, 8, 3, [])
     goblin = Enemigo("Goblin", 10, 3, 1)
 
@@ -294,6 +327,7 @@ def test_combate_gana_el_personaje_fuerte():
 
 
 def test_combate_pierde_el_personaje_debil():
+    # Un héroe débil pierde: ejecutar() devuelve False y el héroe muere.
     heroe = Personaje("Debil", 5, 1, 0, [])
     orco = Enemigo("Orco", 20, 5, 3)
 
@@ -302,6 +336,7 @@ def test_combate_pierde_el_personaje_debil():
 
 
 def test_enemigo_no_contraataca_si_muere_en_el_primer_golpe():
+    # Si el enemigo muere de un golpe, no responde: el héroe conserva su vida.
     heroe = Personaje("Aria", 30, 20, 2, [])
     goblin = Enemigo("Goblin", 5, 3, 1)
     combate = Combate(heroe, goblin)
@@ -314,6 +349,7 @@ def test_enemigo_no_contraataca_si_muere_en_el_primer_golpe():
 
 
 def test_combate_no_se_ejecuta_si_el_personaje_ya_esta_derrotado():
+    # Con el héroe ya muerto, el combate ni empieza y no deja registro.
     heroe = Personaje("Aria", 0, 5, 2, [])
     goblin = Enemigo("Goblin", 10, 3, 1)
     combate = Combate(heroe, goblin)
@@ -329,6 +365,7 @@ def test_combate_no_se_ejecuta_si_el_personaje_ya_esta_derrotado():
 
 
 def test_misma_semilla_genera_la_misma_mazmorra():
+    # La misma semilla produce siempre la misma mazmorra (reproducibilidad).
     m1 = GeneradorMazmorras(semilla=7).generar_mazmorra("Cripta", 4)
     m2 = GeneradorMazmorras(semilla=7).generar_mazmorra("Cripta", 4)
 
@@ -336,6 +373,7 @@ def test_misma_semilla_genera_la_misma_mazmorra():
 
 
 def test_estructura_de_la_mazmorra_generada():
+    # La mazmorra tiene el número de salas pedido y la primera es la entrada, sin enemigos.
     mazmorra = GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", 4)
 
     assert len(mazmorra.salas) == 4
@@ -345,11 +383,13 @@ def test_estructura_de_la_mazmorra_generada():
 
 @pytest.mark.parametrize("num_salas", [0, 1, 2, -1, 1.5, "4", True])
 def test_generador_rechaza_numero_de_salas_invalido(num_salas):
+    # El número de salas debe ser un entero válido (mínimo 3).
     with pytest.raises(ValueError):
         GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", num_salas=num_salas)
 
 
 def test_generador_crea_enemigos_independientes():
+    # Cada enemigo generado es un objeto propio: dañar uno no afecta a los demás.
     mazmorra = GeneradorMazmorras(semilla=3).generar_mazmorra("Cripta", 3)
     enemigos = mazmorra.enemigos_totales()
 
@@ -361,12 +401,14 @@ def test_generador_crea_enemigos_independientes():
 
 
 def test_mazmorra_sin_enemigos_esta_despejada():
+    # Una mazmorra sin enemigos cuenta como despejada.
     mazmorra = Mazmorra("Cripta", 100, [Sala(0, "entrada", [], [])])
 
     assert mazmorra.esta_despejada() is True
 
 
 def test_polimorfismo_distintos_enemigos_distinto_dano():
+    # Polimorfismo: Goblin y Orco calculan el daño de forma distinta con el mismo método.
     heroe = Personaje("Aria", 30, 5, 2, [])
     goblin = Goblin("Goblin", 10, 3, 1)
     orco = Orco("Orco", 20, 5, 3)
@@ -384,6 +426,7 @@ def test_polimorfismo_distintos_enemigos_distinto_dano():
 
 @pytest.mark.parametrize("semilla", range(30))
 def test_toda_mazmorra_tiene_entrada_objeto_y_enemigo(semilla):
+    # Con 3 salas, siempre hay entrada + una de objeto + una de enemigo, sea cual sea la semilla.
     mazmorra = GeneradorMazmorras(semilla).generar_mazmorra("Cripta", 3)
     tipos = [s.tipo for s in mazmorra.salas]
 
@@ -393,6 +436,7 @@ def test_toda_mazmorra_tiene_entrada_objeto_y_enemigo(semilla):
 
 @pytest.mark.parametrize("semilla", range(30))
 def test_salas_de_enemigo_y_objeto_tienen_lo_que_toca(semilla):
+    # Cada tipo de sala contiene solo lo que le corresponde: un enemigo, un objeto o nada.
     mazmorra = GeneradorMazmorras(semilla).generar_mazmorra("Cripta", 8)
 
     for sala in mazmorra.salas:
@@ -405,6 +449,7 @@ def test_salas_de_enemigo_y_objeto_tienen_lo_que_toca(semilla):
 
 
 def test_generar_aleatoria_respeta_limites_y_usa_los_nombres_de_la_lista():
+    # Las mazmorras aleatorias respetan el mínimo y máximo de salas y usan nombres de la lista.
     generador = GeneradorMazmorras(semilla=5)
 
     for _ in range(50):
@@ -414,6 +459,7 @@ def test_generar_aleatoria_respeta_limites_y_usa_los_nombres_de_la_lista():
 
 
 def test_generar_aleatoria_no_repite_nombres_usados():
+    # Si solo queda un nombre libre, se elige ese.
     usados = set(NOMBRES_MAZMORRAS[:-1])
     mazmorra = GeneradorMazmorras(semilla=5).generar_aleatoria(usados)
 
@@ -421,16 +467,19 @@ def test_generar_aleatoria_no_repite_nombres_usados():
 
 
 def test_si_todos_los_nombres_estan_usados_sigue_generando():
+    # Aunque todos los nombres estén usados, el generador no falla.
     mazmorra = GeneradorMazmorras(semilla=5).generar_aleatoria(set(NOMBRES_MAZMORRAS))
 
     assert mazmorra.nombre_m in NOMBRES_MAZMORRAS
 
 
 def test_hay_290_nombres_distintos():
+    # La lista de nombres tiene 290 entradas, todas únicas.
     assert len(NOMBRES_MAZMORRAS) == len(set(NOMBRES_MAZMORRAS)) == 290
 
 
 def test_el_progreso_empieza_despues_de_la_entrada():
+    # Al empezar, el progreso apunta a la sala 1 (la entrada se salta) y no está completada.
     mazmorra = GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", 4)
 
     assert mazmorra.progreso == 1
@@ -439,6 +488,7 @@ def test_el_progreso_empieza_despues_de_la_entrada():
 
 
 def test_avanzar_obliga_a_ir_sala_por_sala_hasta_completar():
+    # Se recorre sala a sala sin saltarse ninguna; al terminar, avanzar() lanza error.
     mazmorra = GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", 4)
 
     for esperada in mazmorra.salas[1:]:
@@ -452,6 +502,7 @@ def test_avanzar_obliga_a_ir_sala_por_sala_hasta_completar():
 
 
 def test_reiniciar_devuelve_la_mazmorra_a_como_estaba():
+    # reiniciar() vuelve el progreso al punto de partida (sala 1).
     mazmorra = GeneradorMazmorras(semilla=1).generar_mazmorra("Cripta", 5)
     mazmorra.avanzar()
     mazmorra.avanzar()
@@ -463,12 +514,14 @@ def test_reiniciar_devuelve_la_mazmorra_a_como_estaba():
 
 @pytest.mark.parametrize("progreso", [-1, 5, 1.5, "1", True])
 def test_mazmorra_rechaza_progreso_invalido(progreso):
+    # El progreso debe ser un entero dentro del rango de salas.
     salas = [Sala(0, "entrada", [], []), Sala(1, "objeto", [], [])]
     with pytest.raises(ValueError):
         Mazmorra("Cripta", 10, salas, progreso)
 
 
 def test_las_armas_buenas_son_mas_probables_en_las_salas_altas():
+    # Estadístico: el bonus medio de las armas es mayor en las últimas salas que en las primeras.
     generador = GeneradorMazmorras(semilla=11)
     n = 3000
     media_primera = sum(generador.elegir_arma(1, 8)[3] for _ in range(n)) / n
@@ -478,6 +531,7 @@ def test_las_armas_buenas_son_mas_probables_en_las_salas_altas():
 
 
 def test_en_la_ultima_sala_la_mejor_arma_es_la_mas_probable():
+    # Estadístico: en la última sala, el arma con más bonus es la que más sale.
     generador = GeneradorMazmorras(semilla=11)
     n = 3000
     bonus = [generador.elegir_arma(7, 8)[3] for _ in range(n)]
@@ -492,6 +546,7 @@ def test_en_la_ultima_sala_la_mejor_arma_es_la_mas_probable():
 
 
 def test_equipar_suma_el_bonus_al_ataque():
+    # Equipar un arma suma su bonus al ataque total sin tocar el ataque base.
     heroe = Personaje("Aria", 30, 5, 2, [])
     goblin = Enemigo("Goblin", 10, 3, 1)
     heroe.equipar(Objeto("Espada", "arma", "Una espada", 3))
@@ -502,6 +557,7 @@ def test_equipar_suma_el_bonus_al_ataque():
 
 
 def test_solo_se_puede_llevar_un_objeto():
+    # Equipar un segundo objeto sustituye al primero.
     heroe = Personaje("Aria", 30, 5, 2, [])
     espada = Objeto("Espada", "arma", "Una espada", 2)
     hacha = Objeto("Hacha", "arma", "Un hacha", 4)
@@ -514,17 +570,20 @@ def test_solo_se_puede_llevar_un_objeto():
 
 
 def test_personaje_rechaza_inventario_con_mas_de_un_objeto():
+    # No se puede crear un personaje con más de un objeto en el inventario.
     objetos = [Objeto("A", "arma", "a"), Objeto("B", "arma", "b")]
     with pytest.raises(DatoInvalidoError):
         Personaje("Aria", 30, 5, 2, objetos)
 
 
 def test_equipar_rechaza_algo_que_no_es_un_objeto():
+    # equipar() solo acepta instancias de Objeto.
     with pytest.raises(DatoInvalidoError):
         Personaje("Aria", 30, 5, 2, []).equipar("espada")
 
 
 def test_sin_objeto_no_hay_arma_equipada():
+    # Sin objeto equipado, el ataque total es el ataque base.
     heroe = Personaje("Aria", 30, 5, 2, [])
 
     assert heroe.objeto_equipado is None
@@ -532,6 +591,7 @@ def test_sin_objeto_no_hay_arma_equipada():
 
 
 def test_curar_devuelve_la_vida_al_maximo():
+    # curar() restaura la vida hasta vida_max.
     heroe = Personaje("Aria", 30, 5, 2, [], vida_max=50)
     assert heroe.vida_max == 50
 
@@ -541,22 +601,26 @@ def test_curar_devuelve_la_vida_al_maximo():
 
 
 def test_la_vida_maxima_por_defecto_es_la_vida_inicial():
+    # Si no se indica vida_max, se usa la vida inicial.
     assert Personaje("Aria", 30, 5, 2, []).vida_max == 30
 
 
 def test_la_vida_no_puede_superar_la_maxima():
+    # No se permite una vida inicial mayor que la máxima.
     with pytest.raises(DatoInvalidoError):
         Personaje("Aria", 40, 5, 2, [], vida_max=30)
 
 
 @pytest.mark.parametrize("vida_max", [0, -5, 2.5, "30", True])
 def test_vida_maxima_invalida(vida_max):
+    # vida_max debe ser un entero positivo.
     with pytest.raises(DatoInvalidoError):
         Personaje("Aria", 1, 5, 2, [], vida_max=vida_max)
 
 
 @pytest.mark.parametrize("oro", [-1, "10", True, None])
 def test_oro_invalido(oro):
+    # El oro debe ser un entero no negativo.
     with pytest.raises(DatoInvalidoError):
         Personaje("Aria", 30, 5, 2, [], oro=oro)
 
@@ -568,15 +632,18 @@ def test_oro_invalido(oro):
 
 @pytest.mark.parametrize("tipo, clase", [("Goblin", Goblin), ("Orco", Orco), ("Enemigo", Enemigo)])
 def test_fabrica_crea_la_clase_correcta(tipo, clase):
+    # La fábrica devuelve la subclase de enemigo que corresponde al tipo pedido.
     assert type(crear_enemigo(tipo, "X", 10, 3, 1)) is clase
 
 
 def test_fabrica_rechaza_tipo_desconocido():
+    # La fábrica lanza error si el tipo de enemigo no existe.
     with pytest.raises(DatoInvalidoError):
         crear_enemigo("Dragon", "X", 10, 3, 1)
 
 
 def test_observador_recibe_cada_golpe_del_combate():
+    # Patrón observer: el observador recibe los mismos eventos que el registro del combate.
     eventos = []
     combate = Combate(Personaje("Aria", 50, 8, 3, []), Goblin("Goblin", 10, 3, 1), [eventos.append])
 
@@ -587,6 +654,7 @@ def test_observador_recibe_cada_golpe_del_combate():
 
 
 def test_suscribir_despues_de_crear_el_combate():
+    # Un observador también puede añadirse después de crear el combate, con suscribir().
     eventos = []
     combate = Combate(Personaje("Aria", 50, 8, 3, []), Goblin("Goblin", 10, 3, 1))
     combate.suscribir(eventos.append)
@@ -597,6 +665,7 @@ def test_suscribir_despues_de_crear_el_combate():
 
 
 def test_dato_invalido_es_value_error_y_error_mazmorra():
+    # La excepción propia hereda de ValueError y de ErrorMazmorra, así que se captura como ambas.
     with pytest.raises(ValueError):
         Objeto("", "arma", "x")
     with pytest.raises(ErrorMazmorra):

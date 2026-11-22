@@ -4,22 +4,27 @@ from pathlib import Path
 
 # excepciones propias. DatoInvalidoError tambien es ValueError, asi los tests con pytest.raises(ValueError) siguen valiendo..
 class ErrorMazmorra(Exception):
+    # Excepción base de todos los errores propios del juego.
     pass
 
 
 class DatoInvalidoError(ErrorMazmorra, ValueError):
+    # Se lanza cuando un dato no cumple las reglas (tipo o valor incorrecto).
     pass
 
 
 class ErrorPersistencia(ErrorMazmorra):
+    # Se lanza cuando falla al guardar o cargar ficheros.
     pass
 
 
 class ErrorExportacion(ErrorMazmorra):
+    # Se lanza cuando falla la exportación de la campaña.
     pass
 
 
 class Campaña:
+    # Agrupa las mazmorras pendientes de una aventura, con su nombre y descripción.
     def __init__(self, nombre_c: str, descripcion: str, mazmorras: list[Mazmorra]):
         if not isinstance(nombre_c, str) or not nombre_c.strip():
             raise DatoInvalidoError("El nombre de la campaña no puede estar vacío")
@@ -37,6 +42,8 @@ class Campaña:
 
 
 class Mazmorra:
+    # Conjunto lineal de salas con un tesoro; lleva el control del progreso del jugador
+    # (qué sala toca) y valida sus datos.
     def __init__(self, nombre_m: str, tesoro: float, salas: list[Sala], progreso: int | None = None):
         if not isinstance(nombre_m, str) or not nombre_m.strip():
             raise DatoInvalidoError("El nombre de la mazmorra no puede estar vacío")
@@ -59,6 +66,7 @@ class Mazmorra:
 
     @tesoro.setter
     def tesoro(self, valor):
+        # El tesoro debe ser un número (no bool) y no negativo.
         if isinstance(valor, bool) or not isinstance(valor, (int, float)):
             raise DatoInvalidoError("El tesoro debe ser un número")
         if valor < 0:
@@ -66,12 +74,15 @@ class Mazmorra:
         self._tesoro = valor
 
     def enemigos_totales(self) -> list["Enemigo"]:
+        # Devuelve todos los enemigos de todas las salas.
         return [e for sala in self.salas for e in sala.enemigos]
 
     def esta_despejada(self) -> bool:
+        # True si no queda ningún enemigo en la mazmorra.
         return not self.enemigos_totales()
 
     def completada(self) -> bool:
+        # True si el progreso ya ha superado todas las salas.
         return self.progreso >= len(self.salas)
 
     def sala_actual(self) -> Sala | None:
@@ -79,6 +90,7 @@ class Mazmorra:
         return None if self.completada() else self.salas[self.progreso]
 
     def avanzar(self) -> None:
+        # Pasa a la siguiente sala; error si la mazmorra ya estaba completada.
         if self.completada():
             raise DatoInvalidoError("La mazmorra ya está completada")
         self.progreso += 1
@@ -92,6 +104,7 @@ class Mazmorra:
 
 
 class Sala:
+    # Una sala de la mazmorra: tiene posición, tipo y, según el tipo, objetos o enemigos.
     # la posicion es un entero (orden de la sala dentro de la mazmorra)
     # tipo: "entrada", "objeto" o "enemigo"
     def __init__(self, posicion: int, tipo: str, objetos: list[Objeto], enemigos: list[Enemigo]):
@@ -115,6 +128,8 @@ class Sala:
 
 # Entidad es la clase base de Personaje y Enemigo, asi las propiedades con sus validaciones se escriben una sola vez
 class Entidad:
+    # Clase base con nombre, vida, ataque y defensa (cada uno validado con propiedades),
+    # y las acciones comunes: recibir daño y atacar.
     def __init__(self, nombre: str, vida: int, ataque: int, defensa: int):
         self.nombre = nombre
         self.vida = vida
@@ -168,6 +183,7 @@ class Entidad:
         self._defensa = valor
 
     def esta_vivo(self) -> bool:
+        # Está vivo mientras su vida sea mayor que 0.
         return self.vida > 0
 
     def recibir_dano(self, cantidad: int) -> None:
@@ -188,6 +204,7 @@ class Entidad:
 
 
 class Enemigo(Entidad):
+    # Enemigo genérico; dos enemigos con los mismos datos se consideran iguales (==).
     # funcion para comparar objetos que tengan los mismos valores en distintas varaivles con (is), dando false
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Enemigo):
@@ -213,6 +230,7 @@ class Orco(Enemigo):
     """Golpea más fuerte a costa de ignorar parte de su propia defensa al cargar."""
 
     def atacar(self, objetivo: Entidad) -> int:
+        # Polimorfismo: el Orco suma +2 a su ataque, así que hace más daño que un enemigo normal.
         dano = max(1, (self.ataque + 2) - objetivo.defensa)
         objetivo.recibir_dano(dano)
         return dano
@@ -224,6 +242,7 @@ TIPOS_ENEMIGO = {"Enemigo": Enemigo, "Goblin": Goblin, "Orco": Orco}
 
 
 def crear_enemigo(tipo: str, nombre: str, vida: int, ataque: int, defensa: int) -> Enemigo:
+    # Fábrica: crea el enemigo de la clase indicada por "tipo"; error si el tipo no existe.
     clase = TIPOS_ENEMIGO.get(tipo)
     if clase is None:
         raise DatoInvalidoError(f"Tipo de enemigo desconocido: {tipo!r}")
@@ -231,6 +250,7 @@ def crear_enemigo(tipo: str, nombre: str, vida: int, ataque: int, defensa: int) 
 
 
 class Objeto:
+    # Objeto del juego (por ejemplo un arma) con nombre, tipo, descripción y bonus de ataque.
     # bonus = lo que suma al ataque del personaje mientras lo lleva equipado
     def __init__(self, nombre_o: str, tipo: str, descripcion_o: str, bonus: int = 0):
         self.nombre_o = nombre_o
@@ -283,6 +303,8 @@ class Objeto:
 
 
 class Personaje(Entidad):
+    # El héroe del jugador: además de los datos de Entidad tiene vida máxima, oro e inventario
+    # (con un único objeto equipado que suma bonus al ataque).
     # el inventario es una lista pero solo cabe un objeto (el que lleva equipado)
     def __init__(
         self,
@@ -327,10 +349,12 @@ class Personaje(Entidad):
 
     @property
     def objeto_equipado(self) -> Objeto | None:
+        # El objeto que lleva (el primero del inventario) o None si no lleva ninguno.
         return self.inventario[0] if self.inventario else None
 
     @property
     def ataque_total(self) -> int:
+        # Ataque base más el bonus del objeto equipado.
         bonus = self.objeto_equipado.bonus if self.objeto_equipado else 0
         return self.ataque + bonus
 
@@ -341,6 +365,7 @@ class Personaje(Entidad):
         self.inventario = [objeto]
 
     def curar(self) -> None:
+        # Restaura la vida hasta el máximo.
         self.vida = self.vida_max
 
     def atacar(self, objetivo: Entidad) -> int:
@@ -354,6 +379,8 @@ class Personaje(Entidad):
 
 
 class Combate:
+    # Combate por turnos entre un personaje y un enemigo; guarda un registro de los golpes
+    # y avisa a los observadores suscritos.
     # combate por turnos sin aleatoriedad, asi los resultados se pueden calcular a mano en los tests
     # PATRON OBSERVER: cada golpe se guarda en el registro y ademas se avisa a los observadores
     # (cualquier funcion que reciba un texto: logging, la interfaz, print...)
@@ -364,9 +391,11 @@ class Combate:
         self.observadores = list(observadores) if observadores else []
 
     def suscribir(self, observador) -> None:
+        # Añade un observador que recibirá cada evento del combate.
         self.observadores.append(observador)
 
     def _emitir(self, evento: str) -> None:
+        # Guarda el evento en el registro y se lo envía a los observadores.
         self.registro.append(evento)
         for observador in self.observadores:
             observador(evento)
@@ -388,6 +417,7 @@ RUTA_NOMBRES = Path(__file__).parent / "nombres_mazmorras.txt"
 
 def cargar_nombres(ruta: Path = RUTA_NOMBRES) -> list[str]:
     # un nombre por linea; se ignoran lineas vacias
+    # Lee la lista de nombres de mazmorras desde el fichero; error si no se puede leer o está vacío.
     try:
         with open(ruta, encoding="utf-8") as f:
             nombres = [linea.strip() for linea in f if linea.strip()]
@@ -402,6 +432,8 @@ NOMBRES_MAZMORRAS = cargar_nombres()
 
 # El generador esta separado del modelo: las clases no saben nada de el, solo lo usa el juego
 class GeneradorMazmorras:
+    # Crea mazmorras de forma aleatoria (reproducible con semilla): elige nombre, número de salas,
+    # enemigos, armas y tesoro.
     MIN_SALAS = 3  # entrada + una sala de objeto + una sala de enemigo
     MAX_SALAS = 8
     # catalogos pequeños: (tipo, nombre, vida, ataque, defensa) y (nombre, tipo, descripcion, bonus de ataque)
@@ -424,6 +456,7 @@ class GeneradorMazmorras:
         self._rng = random.Random(semilla)
 
     def elegir_arma(self, posicion: int, total: int) -> tuple:
+        # Elige un arma al azar con pesos: cuanto más avanzada la sala, más probable es una arma buena.
         # cuanto mas lejos de la entrada, mas pesan las armas buenas:
         # en la primera sala los pesos son 8-4-2-1 y en la ultima 1-2-4-8, y en medio se mezclan
         avance = posicion / max(1, total - 1)
@@ -431,6 +464,7 @@ class GeneradorMazmorras:
         return self._rng.choices(self.ARMAS, weights=pesos)[0]
 
     def generar_sala(self, posicion: int, tipo: str, total: int) -> Sala:
+        # Crea una sala del tipo indicado: con un enemigo, con un arma o vacía (entrada).
         enemigos = []
         objetos = []
         if tipo == "enemigo":
@@ -440,6 +474,8 @@ class GeneradorMazmorras:
         return Sala(posicion, tipo, objetos, enemigos)
 
     def generar_mazmorra(self, nombre: str, num_salas: int) -> Mazmorra:
+        # Genera una mazmorra con entrada y, como mínimo, una sala de objeto y otra de enemigo
+        # (en orden aleatorio), más un tesoro aleatorio entre 50 y 500.
         if isinstance(num_salas, bool) or not isinstance(num_salas, int):
             raise DatoInvalidoError("El número de salas debe ser un entero")
         if num_salas < self.MIN_SALAS:
@@ -456,6 +492,8 @@ class GeneradorMazmorras:
         return Mazmorra(nombre, tesoro, salas)
 
     def generar_aleatoria(self, usados=()) -> Mazmorra:
+        # Genera una mazmorra completamente aleatoria: nombre (evitando los usados si es posible)
+        # y número de salas entre MIN_SALAS y MAX_SALAS.
         # el jugador no elige ni el nombre ni las salas: sale todo del generador
         libres = [n for n in NOMBRES_MAZMORRAS if n not in usados]
         nombre = self._rng.choice(libres or NOMBRES_MAZMORRAS)

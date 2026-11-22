@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def demo_consola(juego: Juego, nombre: str, exportar: str | None) -> None:
-    # demo sin interfaz: juega sola la primera mazmorra, guarda y (si se pide) exporta
+    # Demo sin interfaz: carga la partida (o crea una nueva), juega sola la primera
+    # mazmorra, guarda el progreso y, si se pide, exporta la campaña.
     juego.suscribir(print)
     if not juego.cargar():
         juego.nueva_partida(nombre)
@@ -19,6 +20,7 @@ def demo_consola(juego: Juego, nombre: str, exportar: str | None) -> None:
         juego.generar_mazmorra()
 
     def equipar_si_mejora(objeto) -> bool:
+        # Decide si el personaje coge un objeto: solo si es mejor que el que lleva.
         actual = juego.personaje.objeto_equipado
         return actual is None or objeto.bonus > actual.bonus
 
@@ -34,6 +36,8 @@ def demo_consola(juego: Juego, nombre: str, exportar: str | None) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Lee los argumentos de la línea de comandos y arranca el juego: demo en consola
+    # (--consola) o interfaz gráfica. Devuelve 0 si todo va bien y 1 si hay un error del juego.
     parser = argparse.ArgumentParser(prog="mazmorra", description="Mazmorras olvidadas")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--consola", action="store_true", help="demo en consola, sin interfaz grafica")

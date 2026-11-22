@@ -25,10 +25,12 @@ logger = logging.getLogger(__name__)
 
 
 def objeto_a_dict(o: Objeto) -> dict:
+    # Convierte un objeto en un diccionario (para poder guardarlo en JSON).
     return {"nombre_o": o.nombre_o, "tipo": o.tipo, "descripcion_o": o.descripcion_o, "bonus": o.bonus}
 
 
 def personaje_a_dict(p: Personaje) -> dict:
+    # Convierte el personaje (con su inventario) en un diccionario.
     return {
         "nombre": p.nombre,
         "vida": p.vida,
@@ -41,6 +43,7 @@ def personaje_a_dict(p: Personaje) -> dict:
 
 
 def campana_a_dict(campana: Campaña) -> dict:
+    # Convierte la campaña completa (mazmorras, salas, objetos y enemigos) en un diccionario.
     return {
         "nombre": campana.nombre_c,
         "descripcion": campana.descripcion,
@@ -74,11 +77,14 @@ def campana_a_dict(campana: Campaña) -> dict:
 
 
 def personaje_desde_dict(d: dict) -> Personaje:
+    # Operación inversa: reconstruye un Personaje a partir de su diccionario.
     inventario = [Objeto(**o) for o in d["inventario"]]
     return Personaje(d["nombre"], d["vida"], d["ataque"], d["defensa"], inventario, d["oro"], d["vida_max"])
 
 
 def campana_desde_dict(datos: dict) -> Campaña:
+    # Operación inversa: reconstruye la campaña y sus mazmorras, salas, objetos y enemigos
+    # (usando la fábrica para recuperar la subclase correcta de cada enemigo).
     mazmorras = []
     for m in datos["mazmorras"]:
         salas = []
@@ -99,6 +105,8 @@ def campana_desde_dict(datos: dict) -> Campaña:
 
 
 def escribir_seguro(ruta: str, texto: str) -> None:
+    # Escribe el texto en un fichero temporal y lo renombra al final, así el original
+    # nunca queda a medias si algo falla. Cualquier error de disco se convierte en ErrorPersistencia.
     # "w" trunca el fichero: si algo falla a medias se pierde todo. Por eso se escribe en un
     # temporal y luego se renombra, el original solo se cambia cuando ya esta todo escrito
     directorio = os.path.dirname(os.path.abspath(ruta))
@@ -117,6 +125,7 @@ def escribir_seguro(ruta: str, texto: str) -> None:
 
 
 def guardar_partida(ruta: str, personaje: Personaje, campana: Campaña, completadas: int) -> None:
+    # Guarda personaje, campaña y mazmorras completadas en un único JSON (con escritura segura).
     datos = {
         "personaje": personaje_a_dict(personaje),
         "campana": campana_a_dict(campana),
@@ -127,6 +136,8 @@ def guardar_partida(ruta: str, personaje: Personaje, campana: Campaña, completa
 
 
 def cargar_partida(ruta: str) -> tuple[Personaje, Campaña, int]:
+    # Lee el JSON, lo valida y devuelve (personaje, campaña, completadas). Si el fichero no
+    # existe deja subir FileNotFoundError; cualquier otro problema lanza ErrorPersistencia.
     # si el fichero no existe sube FileNotFoundError (el juego lo usa para saber que es la primera vez)
     try:
         with open(ruta, encoding="utf-8") as f:
@@ -161,17 +172,20 @@ def cargar_partida(ruta: str) -> tuple[Personaje, Campaña, int]:
 
 
 class Exportador(ABC):
+    # Interfaz común de los exportadores: cada formato implementa exportar() y devuelve un texto.
     @abstractmethod
     def exportar(self, campana: Campaña) -> str:
         pass
 
 
 class ExportadorJSON(Exportador):
+    # Exporta la campaña como texto JSON.
     def exportar(self, campana: Campaña) -> str:
         return json.dumps(campana_a_dict(campana), ensure_ascii=False, indent=2)
 
 
 class ExportadorMarkdown(Exportador):
+    # Exporta la campaña como un documento Markdown legible (títulos por mazmorra y sala).
     def exportar(self, campana: Campaña) -> str:
         lineas = [f"# {campana.nombre_c}", "", campana.descripcion, ""]
         for m in campana.mazmorras:
@@ -190,6 +204,8 @@ EXPORTADORES = {"json": ExportadorJSON(), "md": ExportadorMarkdown()}
 
 
 def exportar_campana(campana: Campaña, formato: str, ruta: str) -> None:
+    # Elige el exportador según el formato y escribe el resultado en la ruta dada;
+    # lanza ErrorExportacion si el formato no existe o no se puede escribir.
     exportador = EXPORTADORES.get(formato)
     if exportador is None:
         raise ErrorExportacion(f"Formato desconocido: {formato!r} (disponibles: {sorted(EXPORTADORES)})")

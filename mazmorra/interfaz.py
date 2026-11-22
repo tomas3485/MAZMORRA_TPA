@@ -18,6 +18,8 @@ VERDE = "#5fbf7a"
 
 
 class App:
+    # Ventana principal del juego: construye la interfaz, muestra el estado de la partida
+    # y traduce los botones en llamadas a Juego.
     def __init__(self, ventana: tk.Tk, juego: Juego):
         self.ventana = ventana
         self.juego = juego
@@ -52,6 +54,7 @@ class App:
 
     # ------------------------------------------------------------ aspecto
     def _estilos(self):
+        # Define los estilos (colores y fuentes) de los botones y de la barra de vida.
         estilo = ttk.Style()
         estilo.theme_use("clam")
         estilo.configure(
@@ -73,12 +76,14 @@ class App:
             )
 
     def _panel(self, titulo: str) -> tk.Frame:
+        # Crea un marco con título dorado y una línea inferior; se usa para cada sección.
         marco = tk.Frame(self.ventana, bg=PANEL, padx=14, pady=10)
         tk.Label(marco, text=titulo.upper(), bg=PANEL, fg=ORO, font=("Segoe UI", 10, "bold")).pack(anchor="w")
         tk.Frame(marco, bg=ORO, height=1).pack(fill="x", pady=(3, 8))
         return marco
 
     def _lista(self, padre) -> tk.Listbox:
+        # Crea una lista (Listbox) con el aspecto del juego.
         return tk.Listbox(
             padre,
             bg=PANEL2,
@@ -93,6 +98,8 @@ class App:
         )
 
     def _crear_widgets(self):
+        # Construye toda la ventana: título, panel del personaje, listas de mazmorras y salas,
+        # registro de eventos y botones inferiores.
         v = self.ventana
         v.columnconfigure(0, weight=0)
         v.columnconfigure(1, weight=1)
@@ -154,6 +161,8 @@ class App:
 
     # ------------------------------------------------------------ arranque
     def _arrancar(self):
+        # Al abrir: si hay partida guardada ofrece continuarla; si no (o si falla la carga),
+        # pide el nombre para empezar una nueva. Si se cancela, cierra la ventana.
         if os.path.exists(self.juego.ruta) and messagebox.askyesno(
             "Partida guardada", "Hay una partida guardada. ¿Quieres continuarla?", parent=self.ventana
         ):
@@ -170,6 +179,7 @@ class App:
 
     def _pedir_nombre(self):
         # al empezar se pregunta el nombre del personaje (no puede estar vacio)
+        # Repite la pregunta hasta tener un nombre válido (máx. 20 caracteres); devuelve None si se cancela.
         while True:
             nombre = simpledialog.askstring("Tu personaje", "¿Cómo se llama tu personaje?", parent=self.ventana)
             if nombre is None:
@@ -179,6 +189,7 @@ class App:
             messagebox.showwarning("Nombre no válido", "El nombre no puede estar vacío.", parent=self.ventana)
 
     def _empezar(self) -> bool:
+        # Pide el nombre y crea una partida nueva; devuelve False si el usuario cancela.
         nombre = self._pedir_nombre()
         if nombre is None:
             return False
@@ -187,6 +198,7 @@ class App:
         return True
 
     def nueva_partida(self):
+        # Botón "Nueva partida": pide confirmación antes de empezar de cero.
         if messagebox.askyesno(
             "Nueva partida", "Se empezará de cero (la partida guardada se sobrescribe al guardar). ¿Seguro?"
         ):
@@ -194,6 +206,8 @@ class App:
 
     # pintar
     def refrescar(self):
+        # Actualiza toda la pantalla con el estado actual: datos del personaje, barra de vida
+        # (roja si queda poca), lista de mazmorras y sus salas.
         p = self.juego.personaje
         self.nombre_var.set(p.nombre)
         self.nivel_var.set(f"Nivel {self.juego.nivel}")
@@ -219,6 +233,8 @@ class App:
         self._mostrar_salas()
 
     def _mostrar_salas(self):
+        # Muestra las salas de la mazmorra seleccionada: superadas en verde, la actual con su
+        # contenido en dorado y las siguientes ocultas ("???").
         self.lista_salas.delete(0, tk.END)
         seleccion = self.lista_mazmorras.curselection()
         if not seleccion:
@@ -243,6 +259,7 @@ class App:
             self.lista_salas.itemconfig(i, foreground=color)
 
     def escribir_log(self, texto: str):
+        # Añade una línea al registro; en rojo si el héroe cae y en dorado si se completa una mazmorra.
         # el juego avisa de cada cosa que pasa y aqui se pinta
         etiqueta = ("malo",) if "Has caído" in texto else ("bueno",) if "completada" in texto else ()
         self.log.configure(state="normal")
@@ -252,6 +269,7 @@ class App:
 
     #  acciones
     def _indice(self):
+        # Devuelve el índice de la mazmorra seleccionada, o avisa y devuelve None si no hay ninguna.
         seleccion = self.lista_mazmorras.curselection()
         if not seleccion:
             messagebox.showinfo("Mazmorras", "No hay ninguna mazmorra seleccionada. Pulsa Generar mazmorra.")
@@ -259,6 +277,7 @@ class App:
         return seleccion[0]
 
     def preguntar_equipar(self, objeto) -> bool:
+        # Muestra el objeto encontrado y pregunta si se quiere equipar (avisa de que se pierde el actual).
         # siempre se pregunta, y solo se puede llevar un objeto
         actual = self.juego.personaje.objeto_equipado
         texto = f"Has encontrado: {objeto.nombre_o} (+{objeto.bonus} ataque)\n{objeto.descripcion_o}\n\n"
@@ -269,6 +288,8 @@ class App:
         return messagebox.askyesno("Objeto encontrado", texto + "¿Quieres equiparte con él?", parent=self.ventana)
 
     def entrar(self):
+        # Entra en la siguiente sala de la mazmorra seleccionada, refresca la pantalla y
+        # avisa si ha habido derrota o si la mazmorra se ha completado.
         indice = self._indice()
         if indice is None:
             return
@@ -285,6 +306,7 @@ class App:
             messagebox.showinfo("¡Mazmorra completada!", f"Has completado {nombre}.", parent=self.ventana)
 
     def generar(self):
+        # Botón "Generar mazmorra": pide una nueva al juego y refresca; si no se puede, muestra el motivo.
         try:
             self.juego.generar_mazmorra()
         except ErrorMazmorra as error:
@@ -294,6 +316,7 @@ class App:
 
     # guardar / exportar / cerrar
     def guardar(self) -> bool:
+        # Guarda la partida y lo anota en el registro; devuelve False (con aviso) si falla.
         try:
             self.juego.guardar()
         except ErrorMazmorra as error:
@@ -303,6 +326,7 @@ class App:
         return True
 
     def exportar(self):
+        # Pide dónde guardar y exporta la campaña en formato Markdown.
         ruta = filedialog.asksaveasfilename(defaultextension=".md", filetypes=[("Markdown", "*.md")])
         if not ruta:
             return
@@ -314,6 +338,7 @@ class App:
         self.escribir_log(f"Mazmorras exportadas a {ruta}")
 
     def cerrar(self):
+        # Al cerrar la ventana guarda la partida; si falla, pregunta si cerrar igualmente.
         # sin personaje (nombre cancelado al empezar) no hay nada que guardar
         if self.juego.personaje is None or self.guardar():
             self.ventana.destroy()
@@ -322,6 +347,7 @@ class App:
 
 
 def lanzar(juego: Juego | None = None):
+    # Crea la ventana de tkinter, monta la App (con el Juego dado o uno nuevo) y arranca el bucle principal.
     ventana = tk.Tk()
     App(ventana, juego or Juego())
     ventana.mainloop()

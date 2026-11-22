@@ -26,6 +26,7 @@ MAX_PENDIENTES = 8  # para que no se acumulen mazmorras sin fin
 
 
 def configurar_logging() -> None:
+    # Configura el registro de eventos en un fichero de log (nivel y ruta según las variables de entorno).
     # solo se llama desde el punto de entrada, no al importar, para no molestar a los tests
     nivel = getattr(logging, NIVEL_LOG, logging.INFO)
     logging.basicConfig(
@@ -38,6 +39,8 @@ def configurar_logging() -> None:
 # PATRON FACADE: la interfaz y la consola solo hablan con Juego, que coordina
 # el generador, el combate, la persistencia y la exportacion
 class Juego:
+    # Clase central del juego: guarda el estado de la partida (personaje, campaña, progreso)
+    # y ofrece las operaciones principales: jugar, guardar, cargar y exportar.
     def __init__(self, ruta: str = RUTA_DATOS, semilla: int | None = None):
         self.ruta = ruta
         self.generador = GeneradorMazmorras(semilla)
@@ -48,18 +51,22 @@ class Juego:
 
     @property
     def nivel(self) -> int:
+        # El nivel del jugador es el número de mazmorras completadas + 1.
         return self.completadas + 1
 
     def suscribir(self, observador) -> None:
+        # Registra una función que recibirá cada mensaje de la partida (patrón observer).
         self.observadores.append(observador)
 
     def _emitir(self, texto: str) -> None:
+        # Anota el mensaje en el log y lo envía a todos los observadores.
         logger.info(texto)
         for observador in self.observadores:
             observador(texto)
 
     # partida
     def nueva_partida(self, nombre: str, iniciales: int = MAZMORRAS_INICIALES) -> None:
+        # Crea un personaje y una campaña nuevos, y genera las mazmorras iniciales.
         self.personaje = Personaje(nombre, 50, 6, 2, [])
         self.campana = Campaña("Las mazmorras olvidadas", "Limpia todas las mazmorras que puedas", [])
         self.completadas = 0
@@ -68,6 +75,7 @@ class Juego:
         self._emitir(f"{nombre} empieza su aventura")
 
     def generar_mazmorra(self):
+        # Añade una mazmorra aleatoria con nombre no repetido; falla si ya hay el máximo pendiente.
         if len(self.campana.mazmorras) >= MAX_PENDIENTES:
             raise ErrorMazmorra(f"Ya hay {MAX_PENDIENTES} mazmorras pendientes, completa alguna primero")
         usados = {m.nombre_m for m in self.campana.mazmorras}
@@ -81,6 +89,8 @@ class Juego:
 
         Devuelve "victoria", "objeto", "vacia", "derrota" o "completada".
         """
+        # Valida el índice, resuelve la sala actual (combate, objeto o vacía) y avanza el progreso.
+        # Si el héroe pierde, la mazmorra se reinicia; si se llega al final, se completa.
         mazmorras = self.campana.mazmorras
         if isinstance(indice, bool) or not isinstance(indice, int) or not 0 <= indice < len(mazmorras):
             raise DatoInvalidoError(f"No existe la mazmorra {indice!r}")
@@ -106,6 +116,8 @@ class Juego:
         return estado
 
     def _combatir(self, mazmorra, sala) -> bool:
+        # Lucha contra los enemigos de la sala. Si el héroe cae, reinicia la mazmorra, lo cura
+        # y devuelve False; si gana a todos, devuelve True.
         for original in sala.enemigos:
             # se lucha contra una copia para que el enemigo de la mazmorra quede intacto si perdemos
             enemigo = copy.copy(original)
@@ -119,6 +131,7 @@ class Juego:
         return True
 
     def _recoger(self, sala, decidir_equipar) -> None:
+        # Por cada objeto de la sala, pregunta (con decidir_equipar) si se equipa o se deja.
         for objeto in sala.objetos:
             if decidir_equipar(objeto):
                 self.personaje.equipar(objeto)
@@ -127,6 +140,8 @@ class Juego:
                 self._emitir(f"Dejas {objeto.nombre_o} donde estaba")
 
     def _completar(self, mazmorra) -> None:
+        # Al terminar una mazmorra: se retira de la lista, se cobra el tesoro y el personaje
+        # sube de nivel (más vida máxima y ataque) y se cura.
         # la mazmorra desaparece de la lista, el personaje cobra el tesoro y sube de nivel
         self.campana.mazmorras.remove(mazmorra)
         self.completadas += 1
@@ -138,6 +153,7 @@ class Juego:
 
     # guardar, cargar y exportar
     def guardar(self) -> None:
+        # Guarda la partida actual en el fichero JSON.
         guardar_partida(self.ruta, self.personaje, self.campana, self.completadas)
 
     def cargar(self) -> bool:
@@ -149,4 +165,5 @@ class Juego:
         return True
 
     def exportar(self, formato: str, ruta: str) -> None:
+        # Exporta la campaña al formato indicado (json o md) en la ruta dada.
         exportar_campana(self.campana, formato, ruta)
