@@ -5,7 +5,7 @@ def test_partida_completa_de_principio_a_fin(tmp_path):
     """Integración: genera, juega, guarda, recarga y exporta, usando juego+persistencia+modelo juntos."""
     ruta = str(tmp_path / "partida.json")
     juego = Juego(ruta=ruta, semilla=7)
-    juego.nuevapartida("Aria", iniciales=1)
+    juego.nueva_partida("Aria", iniciales=1)
 
     # jugar la primera mazmorra hasta completarla o perder, sin bucles infinitos
     for _ in range(50):
